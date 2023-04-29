@@ -1,0 +1,11 @@
+# Strategy
+## move
+We write a move function to move easily when we convey arguments velocity, x position, y position to it / 
+it will compare the position of bot with the target position to determine whether to move
+
+## Solve Puzzle
+We use a normal n queen approach to solve puzzle and wrapper it as a function that we can call / 
+We also has a loop_solve_puzzle function that helps us solve the puzzle for multipe times to save enough water / 
+
+## Water Control
+We turn off POWERWASH before solving puzzle to save water, and only open it when we deciding to move / 
