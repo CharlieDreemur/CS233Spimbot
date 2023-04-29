@@ -74,7 +74,6 @@ get_time_left:
     jr  $ra
 
 find_bot:
-    
 
 quickMoveTo: #a0 loop cycle, a1 velocity, a2 x, a3 y
     addi $sp, $sp, -16
@@ -261,8 +260,7 @@ main: #p4 stop-falling interrupt flag, p5 puzzle interrupt flag, p6 timer interr
     sw      $t2, VELOCITY
         
     # YOUR CODE GOES HERE!!!!!!
-    
-    
+
     #find bot position
     lw $t0, BOT_X
     bgt $t0, 200, bot1_option
@@ -270,6 +268,7 @@ main: #p4 stop-falling interrupt flag, p5 puzzle interrupt flag, p6 timer interr
     
     
 bot0_option:    
+
     li $a0, 52
     li $a1, 5
     li $a2, 128
@@ -394,6 +393,7 @@ bot1_loop:
         li $t0, 5
         sw $t0, VELOCITY
         j  bot1_loop
+
 j loop
     
 
