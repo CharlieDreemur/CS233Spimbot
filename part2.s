@@ -220,24 +220,6 @@ main:
     jal puzzle_solve
 
 loop: # Once done, enter an infinite loop so that your bot can be graded by QtSpimbot once 10,000,000 cycles have elapsed
-    jal puzzle_solve
-    lw $t4, BOT_X
-    li $t3, 296
-    bge $t4, $t3, stopmove
-    lw $t1, VELOCITY
-    beq $t1, $zero, moveright
-    j endif
-stopmove:
-    sw $zero, VELOCITY
-    j endif
-moveright:
-    li $t2, 0
-    li $t3, 1
-    sw $t2, ANGLE
-    sw $t3, ANGLE_CONTROL
-    li $t3, 2
-    sw $t3, VELOCITY
-endif:
     j loop
     
 
