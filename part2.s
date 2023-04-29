@@ -51,29 +51,29 @@ has_puzzle: .word 0
 
 has_bonked: .byte 0
 
+test_falling_string: .asciiz "Falling interrupt detected!\n"
+
 #test
 # -- string literals --
 .text
-quickMoveTo: ##a0, angle, a1 velocity, a2 x, a3 y
-    addi $sp, $sp, -20
+quickMoveTo: #a0 loop cycle, a1 velocity, a2 x, a3 y
+    addi $sp, $sp, -16
     sw   $ra, 0($sp)
-    sw   $a0, 4($sp)
-    sw   $a1, 8($sp)
-    sw   $a2, 12($sp)
-    sw   $a3, 16($sp)
-    li   $a0, 50
+    sw   $a1, 4($sp)
+    sw   $a2, 8($sp)
+    sw   $a3, 12($sp)
+    #a0 is the loop cycle
     jal  loop_solve_puzzle
     li   $t0, 0x00040000
     sw   $t0, POWERWASH_ON
-    lw   $a0, 4($sp)
-    lw   $a1, 8($sp)
-    lw   $a2, 12($sp)
-    lw   $a3, 16($sp)
+    lw   $a1, 4($sp)
+    lw   $a2, 8($sp)
+    lw   $a3, 12($sp)
     jal  moveTo
     sw $zero, POWERWASH_OFF
 
     lw   $ra, 0($sp)
-    addi $sp, $sp, 20
+    addi $sp, $sp, 16
     jr   $ra
 
 moveTo: #a1 velocity, a2 x, a3 y
@@ -117,16 +117,16 @@ moveTo: #a1 velocity, a2 x, a3 y
     xMoveToBge:
         #move right
         li $t0, 0
-        sw $a0, ANGLE
+        sw $t0, ANGLE
         li $s2, 1
         sw $s2, ANGLE_CONTROL
-        
+
         bge $s0, $a2, endloopMoveTo
         j loopMoveTo
     xMoveToBle:
         #move left
         li $t0, 180
-        sw $a0, ANGLE
+        sw $t0, ANGLE
         li $s2, 1
         sw $s2, ANGLE_CONTROL
 
@@ -138,7 +138,7 @@ moveTo: #a1 velocity, a2 x, a3 y
     yMoveToBge:
         #move down
         li $t0, 90
-        sw $a0, ANGLE
+        sw $t0, ANGLE
         li $s2, 1
         sw $s2, ANGLE_CONTROL
 
@@ -147,7 +147,7 @@ moveTo: #a1 velocity, a2 x, a3 y
     yMoveToBle:  
         #move up
         li $t0, 270
-        sw $a0, ANGLE
+        sw $t0, ANGLE
         li $s2, 1
         sw $s2, ANGLE_CONTROL
 
@@ -219,7 +219,7 @@ loop_solve_puzzle:
 	lw  $ra, 0($sp)
 	add $sp, $sp, 12
 	jr  $ra
-main:
+main: #p4 stop-falling interrupt flag, p5 puzzle interrupt flag, p6 timer interrupt flag
     sub $sp, $sp, 4
     sw  $ra, 0($sp)
 
@@ -239,38 +239,50 @@ main:
     sw      $t2, VELOCITY
         
     # YOUR CODE GOES HERE!!!!!!
-
+    
+    li $a0, 40
     li $a1, 5
     li $a2, 128
     li $a3, -1
     jal quickMoveTo
 
+    li $a0, 40
     li $a1, 5
     li $a2, -1
     li $a3, 216
     jal quickMoveTo
 
+    li $a0, 40
     li $a1, 5
     li $a2, 56
     li $a3, -1
     jal quickMoveTo
 
-    li   $a0, 30
-    jal  loop_solve_puzzle
-
+    li $a0, 80
     li $a1, 5
     li $a2, -1
     li $a3, 52
     jal quickMoveTo
 
+    li $a0, 40
     li $a1, 5
     li $a2, 120
     li $a3, -1
     jal quickMoveTo
 
 loop: # Once done, enter an infinite loop so that your bot can be graded by QtSpimbot once 10,000,000 cycles have elapsed
-    
-    j loop
+    falling_loop:
+        lb $t0, 0($t4)
+        li $t1, 1
+        bne $t0, $t1, fall_down_move #if bonk, execute fall down move
+        j falling_loop
+    fall_down_move:
+        li $a0, 40
+        li $a1, 5
+        li $a2, 260
+        li $a3, -1
+        jal quickMoveTo
+j loop
     
 
 .kdata
@@ -335,14 +347,17 @@ interrupt_dispatch:                 # Interrupt:
 bonk_interrupt:
     sw      $0, BONK_ACK
     la      $t0, has_bonked
-    li      $t1, 1
-    sb      $t1, 0($t0)
+    li      $t0, 1
+    sb      $t0, 0($t0) #set bonk interrupt flag
+
     #Fill in your bonk handler code here
     j       interrupt_dispatch      # see if other interrupts are waiting
 
 timer_interrupt:
     sw      $0, TIMER_ACK
     #Fill your timer interrupt code here
+    li      $t0, 1
+    sb      $t0, 0($t6) #set timer interrupt flag
     j        interrupt_dispatch     # see if other interrupts are waiting
 
 request_puzzle_interrupt:
@@ -356,11 +371,20 @@ request_puzzle_interrupt:
 falling_interrupt:
     sw      $0, FALLING_ACK
     #Fill in your respawn handler code here
+
     j       interrupt_dispatch
 
 stop_falling_interrupt:
+    li $v0, 4         # Load the print string syscall number into $v0
+    la $a0, test_falling_string # Load the address of the string into $a0
+    syscall           # Call the print string syscall
     sw      $0, STOP_FALLING_ACK
     #Fill in your respawn handler code here
+    li      $t0, 1
+    sb      $t0, 0($t4) #set stop_falling_interrupt flag
+    li $v0, 4         # Load the print string syscall number into $v0
+    la $a0, test_falling_string # Load the address of the string into $a0
+    syscall           # Call the print string syscall
     j       interrupt_dispatch
 
 non_intrpt:                         # was some non-interrupt
