@@ -56,6 +56,23 @@ test_falling_string: .asciiz "Falling interrupt detected!\n"
 #test
 # -- string literals --
 .text
+get_water_level:
+    lw  $t0, GET_WATER_LEVEL
+    li  $t1, 200            #water_level < 200, solve_puzzle
+    ble $t0, $t1, end
+    li  $a0, 80            #temporarily solve for 80 cycles
+    jal loop_solve_puzzle
+    end:
+        jr $ra
+
+get_time_left:
+    lw $t0, TIMER
+    li  $t1, 10000000        #total cycles
+    sub $t0, $t0, $t1        #cycles left
+    li  $t1, 10000
+    blt $t0, $t1, last_step    #when cycles_left <  10000, execute last step
+    jr  $ra
+
 quickMoveTo: #a0 loop cycle, a1 velocity, a2 x, a3 y
     addi $sp, $sp, -16
     sw   $ra, 0($sp)
@@ -273,7 +290,7 @@ main: #p4 stop-falling interrupt flag, p5 puzzle interrupt flag, p6 timer interr
     jal quickMoveTo
 
     li $a1, 5
-    li $a2, 154
+    li $a2, 162
     li $a3, -1
     jal moveTo
 
@@ -284,8 +301,8 @@ main: #p4 stop-falling interrupt flag, p5 puzzle interrupt flag, p6 timer interr
     sw $t0, ANGLE
     li $t0, 1
     sw $t0, ANGLE_CONTROL
-    li   $t0, 0x00040000
-    sw   $t0, POWERWASH_ON
+    li $t0, 0x00040000
+    sw $t0, POWERWASH_ON
     li $t0, 5
     sw $t0, VELOCITY
 loop: # Once done, enter an infinite loop so that your bot can be graded by QtSpimbot once 10,000,000 cycles have elapsed
