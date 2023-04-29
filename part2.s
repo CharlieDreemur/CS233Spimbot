@@ -51,29 +51,49 @@ has_puzzle: .word 0
 
 has_bonked: .byte 0
 
+test_falling_string: .asciiz "Falling interrupt detected!\n"
+
 #test
 # -- string literals --
 .text
-quickMoveTo: ##a0, angle, a1 velocity, a2 x, a3 y
-    addi $sp, $sp, -20
+get_water_level:
+    lw  $t0, GET_WATER_LEVEL
+    li  $t1, 200            #water_level < 200, solve_puzzle
+    ble $t0, $t1, end
+    li  $a0, 80            #temporarily solve for 80 cycles
+    jal loop_solve_puzzle
+    end:
+        jr $ra
+
+get_time_left:
+    lw $t0, TIMER
+    li  $t1, 10000000        #total cycles
+    sub $t0, $t0, $t1        #cycles left
+    li  $t1, 10000
+    blt $t0, $t1, last_step    #when cycles_left <  10000, execute last step
+    jr  $ra
+
+find_bot:
+    
+
+quickMoveTo: #a0 loop cycle, a1 velocity, a2 x, a3 y
+    addi $sp, $sp, -16
     sw   $ra, 0($sp)
-    sw   $a0, 4($sp)
-    sw   $a1, 8($sp)
-    sw   $a2, 12($sp)
-    sw   $a3, 16($sp)
-    li   $a0, 50
+    sw   $a1, 4($sp)
+    sw   $a2, 8($sp)
+    sw   $a3, 12($sp)
+    #a0 is the loop cycle
     jal  loop_solve_puzzle
     li   $t0, 0x00040000
     sw   $t0, POWERWASH_ON
-    lw   $a0, 4($sp)
-    lw   $a1, 8($sp)
-    lw   $a2, 12($sp)
-    lw   $a3, 16($sp)
+    lw   $a1, 4($sp)
+    lw   $a2, 8($sp)
+    lw   $a3, 12($sp)
     jal  moveTo
     sw $zero, POWERWASH_OFF
 
     lw   $ra, 0($sp)
-    addi $sp, $sp, 20
+    addi $sp, $sp, 16
     jr   $ra
 
 moveTo: #a1 velocity, a2 x, a3 y
@@ -117,16 +137,16 @@ moveTo: #a1 velocity, a2 x, a3 y
     xMoveToBge:
         #move right
         li $t0, 0
-        sw $a0, ANGLE
+        sw $t0, ANGLE
         li $s2, 1
         sw $s2, ANGLE_CONTROL
-        
+
         bge $s0, $a2, endloopMoveTo
         j loopMoveTo
     xMoveToBle:
         #move left
         li $t0, 180
-        sw $a0, ANGLE
+        sw $t0, ANGLE
         li $s2, 1
         sw $s2, ANGLE_CONTROL
 
@@ -138,7 +158,7 @@ moveTo: #a1 velocity, a2 x, a3 y
     yMoveToBge:
         #move down
         li $t0, 90
-        sw $a0, ANGLE
+        sw $t0, ANGLE
         li $s2, 1
         sw $s2, ANGLE_CONTROL
 
@@ -147,7 +167,7 @@ moveTo: #a1 velocity, a2 x, a3 y
     yMoveToBle:  
         #move up
         li $t0, 270
-        sw $a0, ANGLE
+        sw $t0, ANGLE
         li $s2, 1
         sw $s2, ANGLE_CONTROL
 
@@ -170,6 +190,8 @@ puzzle_solve:
     addi $sp, $sp, -8
     sw   $ra, 0($sp)
     li      $t1, 2
+    #turn off powerwash
+    sw $zero, POWERWASH_OFF
     solve_puzzle:
         ble     $t1, $zero, end_solve_puzzle
         la      $t7, puzzlewrapper
@@ -219,7 +241,7 @@ loop_solve_puzzle:
 	lw  $ra, 0($sp)
 	add $sp, $sp, 12
 	jr  $ra
-main:
+main: #p4 stop-falling interrupt flag, p5 puzzle interrupt flag, p6 timer interrupt flag
     sub $sp, $sp, 4
     sw  $ra, 0($sp)
 
@@ -239,38 +261,140 @@ main:
     sw      $t2, VELOCITY
         
     # YOUR CODE GOES HERE!!!!!!
-
+    
+    
+    #find bot position
+    lw $t0, BOT_X
+    bgt $t0, 200, bot1_option
+    j   bot0_option
+    
+    
+bot0_option:    
+    li $a0, 52
     li $a1, 5
     li $a2, 128
     li $a3, -1
     jal quickMoveTo
 
+    li $a0, 40
     li $a1, 5
     li $a2, -1
     li $a3, 216
     jal quickMoveTo
 
+    li $a0, 30
     li $a1, 5
     li $a2, 56
     li $a3, -1
     jal quickMoveTo
 
-    li   $a0, 30
-    jal  loop_solve_puzzle
-
+    li $a0, 30
     li $a1, 5
     li $a2, -1
-    li $a3, 52
+    li $a3, 144
     jal quickMoveTo
 
+    li $a0, 30
     li $a1, 5
-    li $a2, 120
+    li $a2, 136
     li $a3, -1
     jal quickMoveTo
 
-loop: # Once done, enter an infinite loop so that your bot can be graded by QtSpimbot once 10,000,000 cycles have elapsed
+    li $a1, 5
+    li $a2, 162
+    li $a3, -1
+    jal moveTo
+
+    li $a0, 120
+    jal loop_solve_puzzle
+    #go down
+    li $t0, 90
+    sw $t0, ANGLE
+    li $t0, 1
+    sw $t0, ANGLE_CONTROL
+    li $t0, 0x00040000
+    sw $t0, POWERWASH_ON
+    li $t0, 5
+    sw $t0, VELOCITY
+    j  bot0_loop
     
-    j loop
+    
+bot1_option:
+    li $a0, 52
+    li $a1, 5
+    li $a2, 184
+    li $a3, -1
+    jal quickMoveTo
+
+    li $a0, 40
+    li $a1, 5
+    li $a2, -1
+    li $a3, 216
+    jal quickMoveTo
+
+    li $a0, 30
+    li $a1, 5
+    li $a2, 256
+    li $a3, -1
+    jal quickMoveTo
+
+    li $a0, 30
+    li $a1, 5
+    li $a2, -1
+    li $a3, 144
+    jal quickMoveTo
+
+    li $a0, 30
+    li $a1, 5
+    li $a2, 176
+    li $a3, -1
+    jal quickMoveTo
+
+    li $a1, 5
+    li $a2, 158
+    li $a3, -1
+    jal moveTo
+
+    li $a0, 120
+    jal loop_solve_puzzle
+    #go down
+    li $t0, 90
+    sw $t0, ANGLE
+    li $t0, 1
+    sw $t0, ANGLE_CONTROL
+    li $t0, 0x00040000
+    sw $t0, POWERWASH_ON
+    li $t0, 5
+    sw $t0, VELOCITY   
+    j  bot1_loop 
+    
+loop: # Once done, enter an infinite loop so that your bot can be graded by QtSpimbot once 10,000,000 cycles have elapsed
+bot0_loop:
+    lw $t0, VELOCITY
+    beq $t0, $zero, set_velocity_bot0
+    j bot0_loop
+    set_velocity_bot0:
+        li $t0, 0
+        sw $t0, ANGLE
+        li $t0, 1
+        sw $t0, ANGLE_CONTROL
+        li $t0, 5
+        sw $t0, VELOCITY
+	j   bot0_loop
+        
+bot1_loop:
+    lw $t0, VELOCITY
+    beq $t0, $zero, set_velocity_bot1
+    j bot1_loop
+    set_velocity_bot1:
+        li $t0, 180
+        sw $t0, ANGLE
+        li $t0, 1
+        sw $t0, ANGLE_CONTROL
+        li $t0, 5
+        sw $t0, VELOCITY
+        j  bot1_loop
+j loop
     
 
 .kdata
@@ -307,7 +431,6 @@ interrupt_handler:
     bne     $a0, 0, non_intrpt
 
 
-
 interrupt_dispatch:                 # Interrupt:
     mfc0    $k0, $13                # Get Cause register, again
     beq     $k0, 0, done            # handled all outstanding interrupts
@@ -335,14 +458,15 @@ interrupt_dispatch:                 # Interrupt:
 bonk_interrupt:
     sw      $0, BONK_ACK
     la      $t0, has_bonked
-    li      $t1, 1
-    sb      $t1, 0($t0)
+
     #Fill in your bonk handler code here
     j       interrupt_dispatch      # see if other interrupts are waiting
 
 timer_interrupt:
     sw      $0, TIMER_ACK
     #Fill your timer interrupt code here
+    li      $t0, 1
+    sb      $t0, 0($t6) #set timer interrupt flag
     j        interrupt_dispatch     # see if other interrupts are waiting
 
 request_puzzle_interrupt:
@@ -356,11 +480,15 @@ request_puzzle_interrupt:
 falling_interrupt:
     sw      $0, FALLING_ACK
     #Fill in your respawn handler code here
+
     j       interrupt_dispatch
 
 stop_falling_interrupt:
+
     sw      $0, STOP_FALLING_ACK
     #Fill in your respawn handler code here
+    li      $t0, 1
+    sb      $t0, 0($t4) #set stop falling interrupt flag
     j       interrupt_dispatch
 
 non_intrpt:                         # was some non-interrupt
