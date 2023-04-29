@@ -179,6 +179,24 @@ puzzle_solve:
             lw      $ra, 0($sp)
             addi    $sp, $sp, 8
             jr      $ra
+waterloop:
+	sub $sp, $sp, 12
+	sw  $ra, 0($sp)
+	move $t1, $a0
+	li   $t2, 0
+	inner_loop:
+		sw $t1, 4($sp)
+		sw $t2, 8($sp)
+		jal puzzle_solve
+		lw  $t1, 4($sp)
+		lw  $t2, 8($sp)
+		add $t2, $t2, 1
+		blt $t2, $t1, inner_loop
+	end_inner:
+	
+	lw  $ra, 0($sp)
+	add $sp, $sp, 12
+	jr  $ra
 main:
     sub $sp, $sp, 4
     sw  $ra, 0($sp)
