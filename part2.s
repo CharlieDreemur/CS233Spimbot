@@ -54,6 +54,26 @@ has_bonked: .byte 0
 
 # -- string literals --
 .text
+quickMoveTo: ##a0, angle, a1 velocity, a2 x, a3 y
+    addi $sp, $sp, -20
+    sw   $ra, 0($sp)
+    sw   $a0, 4($sp)
+    sw   $a1, 8($sp)
+    sw   $a2, 12($sp)
+    sw   $a3, 16($sp)
+    jal  puzzle_solve
+    li   $t0, 0x00040000
+    sw   $t0, POWERWASH_ON
+    lw   $a0, 4($sp)
+    lw   $a1, 8($sp)
+    lw   $a2, 12($sp)
+    lw   $a3, 16($sp)
+    jal  moveTo
+    sw $zero, POWERWASH_OFF
+
+    lw   $ra, 0($sp)
+    addi $sp, $sp, 20
+    jr   $ra
 
 moveTo: #a0, angle, a1 velocity, a2 x, a3 y
     addi $sp, $sp, -24
@@ -63,7 +83,7 @@ moveTo: #a0, angle, a1 velocity, a2 x, a3 y
     sw $s2, 12($sp) #temp
     sw $s3, 16($sp) #0 move x or 1 move y
     sw $s4, 20($sp) #0 move left or 1 move right
-#initial
+    #initial
     sw $a0, ANGLE
     li $s2, 1
     sw $s2, ANGLE_CONTROL
@@ -74,71 +94,70 @@ moveTo: #a0, angle, a1 velocity, a2 x, a3 y
     beq $a2, $s2, setyMoveTo  #if x=-1, move y
     beq $a3, $s3, setxMoveTo  #if y=-1, move x
     #j endloopMoveTo #if x=-1, y=-1, end direclty
-setxMoveTo:
-    li $s3, 0
-    bge $a2, $s0, setRightMoveTo
-    j setLeftMoveTo
-setyMoveTo:
-    li $s3, 1
-    bge $a3, $s1, setRightMoveTo
-    j setLeftMoveTo
-setLeftMoveTo:
-    li $s4, 0
-    j loopMoveTo
-setRightMoveTo:
-    li $s4, 1
-    j loopMoveTo
+    setxMoveTo:
+        li $s3, 0
+        bge $a2, $s0, setRightMoveTo
+        j setLeftMoveTo
+    setyMoveTo:
+        li $s3, 1
+        bge $a3, $s1, setRightMoveTo
+        j setLeftMoveTo
+    setLeftMoveTo:
+        li $s4, 0
+        j loopMoveTo
+    setRightMoveTo:
+        li $s4, 1
+        j loopMoveTo
+    loopMoveTo:
+        lw $s0, BOT_X
+        lw $s1, BOT_Y
+        beq $s3, $zero, xMoveTo
+        j yMoveTo
+    xMoveTo:
+        beq $s4, $zero, xMoveToBle
+        j xMoveToBge
+    xMoveToBge:
+        bge $s0, $a2, endloopMoveTo
+        j loopMoveTo
+    xMoveToBle:
+        ble $s0, $a2, endloopMoveTo
+        j loopMoveTo
+    yMoveTo:
+        beq $s4, $zero, yMoveToBle
+        j yMoveToBge
+    yMoveToBge:  
+        bge $s1, $a3, endloopMoveTo
+        j loopMoveTo
+    yMoveToBle:  
+        ble $s1, $a3, endloopMoveTo
+        j loopMoveTo
 
-loopMoveTo:
-    lw $s0, BOT_X
-    lw $s1, BOT_Y
-    beq $s3, $zero, xMoveTo
-    j yMoveTo
-xMoveTo:
-    beq $s4, $zero, xMoveToBle
-    j xMoveToBge
-xMoveToBge:
-    bge $s0, $a2, endloopMoveTo
-    j loopMoveTo
-xMoveToBle:
-    ble $s0, $a2, endloopMoveTo
-    j loopMoveTo
-yMoveTo:
-    beq $s4, $zero, yMoveToBle
-    j yMoveToBge
-yMoveToBge:  
-    bge $s1, $a3, endloopMoveTo
-    j loopMoveTo
-yMoveToBle:  
-    ble $s1, $a3, endloopMoveTo
-    j loopMoveTo
+    endloopMoveTo:
+        sw $zero, VELOCITY #velocity = 0
 
-endloopMoveTo:
-    sw $zero, VELOCITY #velocity = 0
+        lw $ra, 0($sp)
+        lw $s0, 4($sp)
+        lw $s1, 8($sp)
+        lw $s2, 12($sp)
+        lw $s3, 16($sp)
+        lw $s4, 20($sp)
+        addi $sp, $sp, 24
+        jr $ra
 
-    lw $ra, 0($sp)
-    lw $s0, 4($sp)
-    lw $s1, 8($sp)
-    lw $s2, 12($sp)
-    lw $s3, 16($sp)
-    lw $s4, 20($sp)
-    addi $sp, $sp, 24
-    jr $ra
-
-    puzzle_solve:
-        addi $sp, $sp, -8
-        sw   $ra, 0($sp)
-        li      $t1, 2
-        solve_puzzle:
-            ble     $t1, $zero, end_solve_puzzle
-            la      $t7, puzzlewrapper
-            sw      $t7, REQUEST_PUZZLE
-            loop_puzzle:
-                la      $t5, has_puzzle
-                lb      $t6, 0($t5)
-                bne     $t6, $zero, end_loop_puzzle
-                j       loop_puzzle
-            end_loop_puzzle:
+puzzle_solve:
+    addi $sp, $sp, -8
+    sw   $ra, 0($sp)
+    li      $t1, 2
+    solve_puzzle:
+        ble     $t1, $zero, end_solve_puzzle
+        la      $t7, puzzlewrapper
+        sw      $t7, REQUEST_PUZZLE
+        loop_puzzle:
+            la      $t5, has_puzzle
+            lb      $t6, 0($t5)
+            bne     $t6, $zero, end_loop_puzzle
+            j       loop_puzzle
+        end_loop_puzzle:
             sb      $zero, 0($t5) # reset puzzle interrupt flag
             la      $t7, puzzlewrapper
             #Get the puzzle, start to get the parameter first
@@ -157,9 +176,9 @@ endloopMoveTo:
             addi    $t1, $t1, -1
             j       solve_puzzle
         end_solve_puzzle:
-        lw      $ra, 0($sp)
-        addi    $sp, $sp, 8
-        jr      $ra
+            lw      $ra, 0($sp)
+            addi    $sp, $sp, 8
+            jr      $ra
 main:
     sub $sp, $sp, 4
     sw  $ra, 0($sp)
@@ -180,46 +199,30 @@ main:
     sw      $t2, VELOCITY
         
     # YOUR CODE GOES HERE!!!!!!
-    jal     puzzle_solve
-    li $t0, 0x00040000
-    sw $t0, POWERWASH_ON
+
     li $a0, 180
     li $a1, 5
     li $a2, 5
     li $a3, -1
-    jal moveTo
-    sw $zero, POWERWASH_OFF
-    jal puzzle_solve
-    li $t0, 0x00040000
-    sw $t0, POWERWASH_ON
+    jal quickMoveTo
+
+
     li $a0, 0
     li $a1, 5
     li $a2, 128
     li $a3, -1
-    jal moveTo
-    sw $zero, POWERWASH_OFF
-    jal puzzle_solve
-    jal puzzle_solve
-    jal puzzle_solve
-    jal puzzle_solve
-    li $t0, 0x00040000
-    sw $t0, POWERWASH_ON
+    jal quickMoveTo
 
     li $a0, 270
     li $a1, 2
     li $a2, -1
     li $a3, 216
-    jal moveTo
-    jal puzzle_solve
-    li $t2, 0
-    li $t3, 1
-    sw $t2, ANGLE
-    sw $t3, ANGLE_CONTROL
-    li $t3, 5
-    sw $t3, VELOCITY
-    jal puzzle_solve
+    jal quickMoveTo
+
 
 loop: # Once done, enter an infinite loop so that your bot can be graded by QtSpimbot once 10,000,000 cycles have elapsed
+    
+endif:
     j loop
     
 
