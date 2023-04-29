@@ -73,6 +73,8 @@ get_time_left:
     blt $t0, $t1, last_step    #when cycles_left <  10000, execute last step
     jr  $ra
 
+find_bot:
+
 quickMoveTo: #a0 loop cycle, a1 velocity, a2 x, a3 y
     addi $sp, $sp, -16
     sw   $ra, 0($sp)
@@ -258,7 +260,15 @@ main: #p4 stop-falling interrupt flag, p5 puzzle interrupt flag, p6 timer interr
     sw      $t2, VELOCITY
         
     # YOUR CODE GOES HERE!!!!!!
+
+    #find bot position
+    lw $t0, BOT_X
+    bgt $t0, 200, bot1_option
+    j   bot0_option
     
+    
+bot0_option:    
+
     li $a0, 52
     li $a1, 5
     li $a2, 128
@@ -305,17 +315,85 @@ main: #p4 stop-falling interrupt flag, p5 puzzle interrupt flag, p6 timer interr
     sw $t0, POWERWASH_ON
     li $t0, 5
     sw $t0, VELOCITY
+    j  bot0_loop
+    
+    
+bot1_option:
+    li $a0, 52
+    li $a1, 5
+    li $a2, 184
+    li $a3, -1
+    jal quickMoveTo
+
+    li $a0, 40
+    li $a1, 5
+    li $a2, -1
+    li $a3, 216
+    jal quickMoveTo
+
+    li $a0, 30
+    li $a1, 5
+    li $a2, 256
+    li $a3, -1
+    jal quickMoveTo
+
+    li $a0, 30
+    li $a1, 5
+    li $a2, -1
+    li $a3, 144
+    jal quickMoveTo
+
+    li $a0, 30
+    li $a1, 5
+    li $a2, 176
+    li $a3, -1
+    jal quickMoveTo
+
+    li $a1, 5
+    li $a2, 158
+    li $a3, -1
+    jal moveTo
+
+    li $a0, 120
+    jal loop_solve_puzzle
+    #go down
+    li $t0, 90
+    sw $t0, ANGLE
+    li $t0, 1
+    sw $t0, ANGLE_CONTROL
+    li $t0, 0x00040000
+    sw $t0, POWERWASH_ON
+    li $t0, 5
+    sw $t0, VELOCITY   
+    j  bot1_loop 
+    
 loop: # Once done, enter an infinite loop so that your bot can be graded by QtSpimbot once 10,000,000 cycles have elapsed
+bot0_loop:
     lw $t0, VELOCITY
-    beq $t0, $zero, set_velocity
-    j loop
-    set_velocity:
+    beq $t0, $zero, set_velocity_bot0
+    j bot0_loop
+    set_velocity_bot0:
         li $t0, 0
         sw $t0, ANGLE
         li $t0, 1
         sw $t0, ANGLE_CONTROL
         li $t0, 5
         sw $t0, VELOCITY
+	j   bot0_loop
+        
+bot1_loop:
+    lw $t0, VELOCITY
+    beq $t0, $zero, set_velocity_bot1
+    j bot1_loop
+    set_velocity_bot1:
+        li $t0, 180
+        sw $t0, ANGLE
+        li $t0, 1
+        sw $t0, ANGLE_CONTROL
+        li $t0, 5
+        sw $t0, VELOCITY
+        j  bot1_loop
+
 j loop
     
 
