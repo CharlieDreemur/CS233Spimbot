@@ -76,7 +76,7 @@ quickMoveTo: ##a0, angle, a1 velocity, a2 x, a3 y
     addi $sp, $sp, 20
     jr   $ra
 
-moveTo: #a0, angle, a1 velocity, a2 x, a3 y
+moveTo: #a1 velocity, a2 x, a3 y
     addi $sp, $sp, -24
     sw $ra, 0($sp)
     sw $s0, 4($sp)
@@ -85,9 +85,6 @@ moveTo: #a0, angle, a1 velocity, a2 x, a3 y
     sw $s3, 16($sp) #0 move x or 1 move y
     sw $s4, 20($sp) #0 move left or 1 move right
     #initial
-    sw $a0, ANGLE
-    li $s2, 1
-    sw $s2, ANGLE_CONTROL
     sw $a1, VELOCITY
     lw $s0, BOT_X
     lw $s1, BOT_Y
@@ -118,18 +115,42 @@ moveTo: #a0, angle, a1 velocity, a2 x, a3 y
         beq $s4, $zero, xMoveToBle
         j xMoveToBge
     xMoveToBge:
+        #move right
+        li $t0, 0
+        sw $a0, ANGLE
+        li $s2, 1
+        sw $s2, ANGLE_CONTROL
+        
         bge $s0, $a2, endloopMoveTo
         j loopMoveTo
     xMoveToBle:
+        #move left
+        li $t0, 180
+        sw $a0, ANGLE
+        li $s2, 1
+        sw $s2, ANGLE_CONTROL
+
         ble $s0, $a2, endloopMoveTo
         j loopMoveTo
     yMoveTo:
         beq $s4, $zero, yMoveToBle
         j yMoveToBge
-    yMoveToBge:  
+    yMoveToBge:
+        #move down
+        li $t0, 90
+        sw $a0, ANGLE
+        li $s2, 1
+        sw $s2, ANGLE_CONTROL
+
         bge $s1, $a3, endloopMoveTo
         j loopMoveTo
     yMoveToBle:  
+        #move up
+        li $t0, 270
+        sw $a0, ANGLE
+        li $s2, 1
+        sw $s2, ANGLE_CONTROL
+
         ble $s1, $a3, endloopMoveTo
         j loopMoveTo
 
@@ -219,19 +240,16 @@ main:
         
     # YOUR CODE GOES HERE!!!!!!
 
-    li $a0, 0
     li $a1, 5
     li $a2, 128
     li $a3, -1
     jal quickMoveTo
 
-    li $a0, 270
     li $a1, 5
     li $a2, -1
     li $a3, 216
     jal quickMoveTo
 
-    li $a0, 180
     li $a1, 5
     li $a2, 56
     li $a3, -1
@@ -240,24 +258,18 @@ main:
     li   $a0, 30
     jal  loop_solve_puzzle
 
-    li $a0, 270
     li $a1, 5
     li $a2, -1
     li $a3, 52
     jal quickMoveTo
 
-    li $a0, 0
     li $a1, 5
     li $a2, 120
     li $a3, -1
     jal quickMoveTo
 
 loop: # Once done, enter an infinite loop so that your bot can be graded by QtSpimbot once 10,000,000 cycles have elapsed
-    li $a0, 0
-    li $a1, 5
-    li $a2, 180
-    li $a3, -1
-    jal quickMoveTo
+    
     j loop
     
 
