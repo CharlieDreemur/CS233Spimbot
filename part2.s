@@ -61,7 +61,8 @@ quickMoveTo: ##a0, angle, a1 velocity, a2 x, a3 y
     sw   $a1, 8($sp)
     sw   $a2, 12($sp)
     sw   $a3, 16($sp)
-    jal  puzzle_solve
+    li   $a0, 50
+    jal  loop_solve_puzzle
     li   $t0, 0x00040000
     sw   $t0, POWERWASH_ON
     lw   $a0, 4($sp)
@@ -179,7 +180,7 @@ puzzle_solve:
             lw      $ra, 0($sp)
             addi    $sp, $sp, 8
             jr      $ra
-waterloop:
+loop_solve_puzzle:
 	sub $sp, $sp, 12
 	sw  $ra, 0($sp)
 	move $t1, $a0
@@ -218,13 +219,6 @@ main:
         
     # YOUR CODE GOES HERE!!!!!!
 
-    li $a0, 180
-    li $a1, 5
-    li $a2, 5
-    li $a3, -1
-    jal quickMoveTo
-
-
     li $a0, 0
     li $a1, 5
     li $a2, 128
@@ -232,15 +226,38 @@ main:
     jal quickMoveTo
 
     li $a0, 270
-    li $a1, 2
+    li $a1, 5
     li $a2, -1
     li $a3, 216
     jal quickMoveTo
 
+    li $a0, 180
+    li $a1, 5
+    li $a2, 56
+    li $a3, -1
+    jal quickMoveTo
+
+    li   $a0, 30
+    jal  loop_solve_puzzle
+
+    li $a0, 270
+    li $a1, 5
+    li $a2, -1
+    li $a3, 52
+    jal quickMoveTo
+
+    li $a0, 0
+    li $a1, 5
+    li $a2, 120
+    li $a3, -1
+    jal quickMoveTo
 
 loop: # Once done, enter an infinite loop so that your bot can be graded by QtSpimbot once 10,000,000 cycles have elapsed
-    
-endif:
+    li $a0, 0
+    li $a1, 5
+    li $a2, 180
+    li $a3, -1
+    jal quickMoveTo
     j loop
     
 
