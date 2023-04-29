@@ -170,6 +170,8 @@ puzzle_solve:
     addi $sp, $sp, -8
     sw   $ra, 0($sp)
     li      $t1, 2
+    #turn off powerwash
+    sw $zero, POWERWASH_OFF
     solve_puzzle:
         ble     $t1, $zero, end_solve_puzzle
         la      $t7, puzzlewrapper
@@ -240,36 +242,39 @@ main: #p4 stop-falling interrupt flag, p5 puzzle interrupt flag, p6 timer interr
         
     # YOUR CODE GOES HERE!!!!!!
     
-    li $a0, 40
+    li $a0, 50
     li $a1, 5
     li $a2, 128
     li $a3, -1
     jal quickMoveTo
 
-    li $a0, 40
+    li $a0, 50
     li $a1, 5
     li $a2, -1
     li $a3, 216
     jal quickMoveTo
 
-    li $a0, 40
+    li $a0, 50
     li $a1, 5
     li $a2, 56
     li $a3, -1
     jal quickMoveTo
 
-    li $a0, 80
+    li $a0, 100
     li $a1, 5
     li $a2, -1
     li $a3, 52
     jal quickMoveTo
 
-    li $a0, 40
-    li $a1, 5
-    li $a2, 120
-    li $a3, -1
-    jal quickMoveTo
+    li $a0, 100
+    jal loop_solve_puzzle
 
+    li $t0, 0
+    sw $t0, ANGLE
+    li $t0, 1
+    sw $t0, ANGLE_CONTROL
+    li $t0, 5
+    sw $t0, VELOCITY
 loop: # Once done, enter an infinite loop so that your bot can be graded by QtSpimbot once 10,000,000 cycles have elapsed
     falling_loop:
         lb $t0, 0($t4)
@@ -317,7 +322,6 @@ interrupt_handler:
     srl     $a0, $k0, 2
     and     $a0, $a0, 0xf           # ExcCode field
     bne     $a0, 0, non_intrpt
-
 
 
 interrupt_dispatch:                 # Interrupt:
@@ -372,19 +376,18 @@ falling_interrupt:
     sw      $0, FALLING_ACK
     #Fill in your respawn handler code here
 
+    li $v0, 4         # Load the print string syscall number into $v0
+    la $a0, test_falling_string # Load the address of the string into $a0
+    syscall           # Call the print string syscall
+
     j       interrupt_dispatch
 
 stop_falling_interrupt:
-    li $v0, 4         # Load the print string syscall number into $v0
-    la $a0, test_falling_string # Load the address of the string into $a0
-    syscall           # Call the print string syscall
+
     sw      $0, STOP_FALLING_ACK
     #Fill in your respawn handler code here
-    li      $t0, 1
-    sb      $t0, 0($t4) #set stop_falling_interrupt flag
-    li $v0, 4         # Load the print string syscall number into $v0
-    la $a0, test_falling_string # Load the address of the string into $a0
-    syscall           # Call the print string syscall
+    li      $t0, 5
+    sw      $t0, VELOCITY
     j       interrupt_dispatch
 
 non_intrpt:                         # was some non-interrupt
