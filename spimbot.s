@@ -56,6 +56,23 @@ test_falling_string: .asciiz "Falling interrupt detected!\n"
 #test
 # -- string literals --
 .text
+get_water_level:
+    lw  $t0, GET_WATER_LEVEL
+    li  $t1, 200            #water_level < 200, solve_puzzle
+    ble $t0, $t1, end
+    li  $a0, 80            #temporarily solve for 80 cycles
+    jal loop_solve_puzzle
+    end:
+        jr $ra
+
+get_time_left:
+    lw $t0, TIMER
+    li  $t1, 10000000        #total cycles
+    sub $t0, $t0, $t1        #cycles left
+    li  $t1, 10000
+    blt $t0, $t1, last_step    #when cycles_left <  10000, execute last step
+    jr  $ra
+
 quickMoveTo: #a0 loop cycle, a1 velocity, a2 x, a3 y
     addi $sp, $sp, -16
     sw   $ra, 0($sp)
@@ -242,51 +259,63 @@ main: #p4 stop-falling interrupt flag, p5 puzzle interrupt flag, p6 timer interr
         
     # YOUR CODE GOES HERE!!!!!!
     
-    li $a0, 50
+    li $a0, 52
     li $a1, 5
     li $a2, 128
     li $a3, -1
     jal quickMoveTo
 
-    li $a0, 50
+    li $a0, 40
     li $a1, 5
     li $a2, -1
     li $a3, 216
     jal quickMoveTo
 
-    li $a0, 50
+    li $a0, 30
     li $a1, 5
     li $a2, 56
     li $a3, -1
     jal quickMoveTo
 
-    li $a0, 100
+    li $a0, 30
     li $a1, 5
     li $a2, -1
-    li $a3, 52
+    li $a3, 144
     jal quickMoveTo
 
-    li $a0, 100
-    jal loop_solve_puzzle
+    li $a0, 30
+    li $a1, 5
+    li $a2, 136
+    li $a3, -1
+    jal quickMoveTo
 
-    li $t0, 0
+    li $a1, 5
+    li $a2, 162
+    li $a3, -1
+    jal moveTo
+
+    li $a0, 120
+    jal loop_solve_puzzle
+    #go down
+    li $t0, 90
     sw $t0, ANGLE
     li $t0, 1
     sw $t0, ANGLE_CONTROL
+    li $t0, 0x00040000
+    sw $t0, POWERWASH_ON
     li $t0, 5
     sw $t0, VELOCITY
 loop: # Once done, enter an infinite loop so that your bot can be graded by QtSpimbot once 10,000,000 cycles have elapsed
-    falling_loop:
-        lb $t0, 0($t4)
-        li $t1, 1
-        bne $t0, $t1, fall_down_move #if bonk, execute fall down move
-        j falling_loop
-    fall_down_move:
-        li $a0, 40
-        li $a1, 5
-        li $a2, 260
-        li $a3, -1
-        jal quickMoveTo
+    lw $t0, VELOCITY
+    beq $t0, $zero, set_velocity
+    j loop
+    set_velocity:
+        li $t0, 0
+        sw $t0, ANGLE
+        li $t0, 1
+        sw $t0, ANGLE_CONTROL
+        li $t0, 5
+        sw $t0, VELOCITY
 j loop
     
 
@@ -351,8 +380,6 @@ interrupt_dispatch:                 # Interrupt:
 bonk_interrupt:
     sw      $0, BONK_ACK
     la      $t0, has_bonked
-    li      $t0, 1
-    sb      $t0, 0($t0) #set bonk interrupt flag
 
     #Fill in your bonk handler code here
     j       interrupt_dispatch      # see if other interrupts are waiting
@@ -376,18 +403,14 @@ falling_interrupt:
     sw      $0, FALLING_ACK
     #Fill in your respawn handler code here
 
-    li $v0, 4         # Load the print string syscall number into $v0
-    la $a0, test_falling_string # Load the address of the string into $a0
-    syscall           # Call the print string syscall
-
     j       interrupt_dispatch
 
 stop_falling_interrupt:
 
     sw      $0, STOP_FALLING_ACK
     #Fill in your respawn handler code here
-    li      $t0, 5
-    sw      $t0, VELOCITY
+    li      $t0, 1
+    sb      $t0, 0($t4) #set stop falling interrupt flag
     j       interrupt_dispatch
 
 non_intrpt:                         # was some non-interrupt
