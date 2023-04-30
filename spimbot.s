@@ -74,6 +74,7 @@ get_time_left:
     jr  $ra
 
 find_bot:
+    
 
 quickMoveTo: #a0 loop cycle, a1 velocity, a2 x, a3 y
     addi $sp, $sp, -16
@@ -260,7 +261,8 @@ main: #p4 stop-falling interrupt flag, p5 puzzle interrupt flag, p6 timer interr
     sw      $t2, VELOCITY
         
     # YOUR CODE GOES HERE!!!!!!
-
+    
+    
     #find bot position
     lw $t0, BOT_X
     bgt $t0, 200, bot1_option
@@ -366,7 +368,6 @@ bot1_option:
     li $t0, 5
     sw $t0, VELOCITY   
     j  bot1_loop 
-    
 loop: # Once done, enter an infinite loop so that your bot can be graded by QtSpimbot once 10,000,000 cycles have elapsed
 bot0_loop:
     lw $t0, VELOCITY
@@ -393,7 +394,6 @@ bot1_loop:
         li $t0, 5
         sw $t0, VELOCITY
         j  bot1_loop
-
 j loop
     
 
@@ -634,90 +634,92 @@ return0:
 
 .globl place_queen_step
 place_queen_step:
-    li      $v0, 1
-    beq     $a3, $0, pqs_return     # if (queens_left == 0)
-
-pqs_prologue: 
-    sub     $sp, $sp, 36 
-    sw      $s0, 0($sp)
-    sw      $s1, 4($sp)
-    sw      $s2, 8($sp)
-    sw      $s3, 12($sp)
-    sw      $s4, 16($sp)
-    sw      $s5, 20($sp)
-    sw      $s6, 24($sp)
-    sw      $s7, 28($sp)
-    sw      $ra, 32($sp)
-
-    move    $s0, $a0                # $s0 = board
-    move    $s1, $a1                # $s1 = n
-    move    $s2, $a2                # $s2 = pos
-    move    $s3, $a3                # $s3 = queens_left
-
-    move    $s4, $a2                # $s4 = i = pos
-
-pqs_for:
-    mul     $t0, $s1, $s1           # $t0 = n * n
-    bge     $s4, $t0, pqs_for_end   # break out of loop if !(i < n * n)
-
-    div     $s5, $s4, $s1           # $s5 = row = i / n
-    rem     $s6, $s4, $s1           # $s6 = col = i % n
-
-    sll     $s7, $s5, 2             # $s7 = row * 4
-    add     $s7, $s7, $s0           # $s7 = &board[row] = board + row * 4
-    lw      $s7, 0($s7)             # $s7 = board[row]
-
-    add     $s7, $s7, $s6           # $s7 = &board[row][col] = board[row] + col
-    lb      $t1, 0($s7)             # $t1 = board[row][col]
-
-    bne     $t1, $0, pqs_for_inc    # skip if !(board[row][col] == 0)
-
-    move    $a0, $s0                # board
-    move    $a1, $s1                # n
-    move    $a2, $s5                # row
-    move    $a3, $s6                # col
-    jal     is_attacked             # call is_attacked(board, n, row, col)
-
-    bne     $v0, $0, pqs_for_inc    # skip if !(is_attacked(board, n, row, col) == 0)
-
-    li      $t0, 1
-    sb      $t0, 0($s7)             # board[row][col] = 1
-
-    move    $a0, $s0                # board
-    move    $a1, $s1                # n
-    add     $a2, $s2, 1             # pos + 1
-    sub     $a3, $s3, 1             # queens_left - 1
-    jal     place_queen_step        # call place_queen_step(board, n, pos + 1, queens_left - 1)
-
-    beq     $v0, $0, pqs_reset_square       # skip return if !(place_queen_step(board, n, pos + 1, queens_left - 1) == 0)
-
-    li      $v0, 1
-    j       pqs_epilogue            # return 1
-
-pqs_reset_square:
-    sb      $0, 0($s7)              # board[row][col] = 0
-
-pqs_for_inc:
-    add     $s4, $s4, 1             # ++i
-    j       pqs_for
-
-pqs_for_end:
-    move    $v0, $0                  # return 0
-
-pqs_epilogue:
-    lw      $s0, 0($sp)
-    lw      $s1, 4($sp)
-    lw      $s2, 8($sp)
-    lw      $s3, 12($sp)
-    lw      $s4, 16($sp)
-    lw      $s5, 20($sp)
-    lw      $s6, 24($sp)
-    lw      $s7, 28($sp)
-    lw      $ra, 32($sp)
-    add     $sp, $sp, 36 
-
-pqs_return:
-    jr      $ra
+    
+    
+    
+    
+    base:
+        bne  $a3, 0, recursive
+        li   $v0, 1
+        jr   $ra
+    
+    recursive:
+    
+    sub $sp,  $sp, 32
+    sw  $ra,  0($sp)
+    sw  $s0,  4($sp)
+    sw  $s1,  8($sp)
+    sw  $s2,  12($sp)
+    sw  $s3,  16($sp)
+    sw  $s4,  20($sp)
+    sw  $s5,  24($sp)
+    sw  $s6,  28($sp)
+    
+    move $s0, $a0
+    move $s1, $a1
+    move $s2, $a2
+    move $s3, $a3
+    mul  $s4, $s1, $s1
+    move $s6, $s2  
+    
+    for:
+        bge  $s6, $s4, end_for
+        div  $a2, $s6, $s1
+        mul  $a3, $a2, $s1
+        sub  $a3, $s6, $a3
+        if:
+            sll  $s5, $a2, 2
+            add  $s5, $s5, $s0
+            lw   $s5, 0($s5)
+            add  $s5, $s5, $a3
+            lb   $t0, 0($s5)
+            bne  $t0, 0, end_if
+            
+            move $a0, $s0
+            move $a1, $s1
+            jal  is_attacked
+            bne  $v0, 0, end_if
+            
+            li   $t0, 1
+            sb   $t0, 0($s5)
+            inner_if:
+                move  $a0, $s0
+                move  $a1, $s1
+                addi  $a2, $s2, 1
+                sub   $a3, $s3, 1
+                jal   place_queen_step
+                bne   $v0, 1, end_inner_if
+                li    $v0, 1
+                
+                lw  $ra,  0($sp)
+                lw  $s0,  4($sp)
+                lw  $s1,  8($sp)
+                lw  $s2,  12($sp)
+                lw  $s3,  16($sp)
+                lw  $s4,  20($sp)
+                lw  $s5,  24($sp)
+                lw  $s6,  28($sp)
+                add $sp, $sp, 32
+                jr  $ra
+            end_inner_if:
+                li  $t0, 0
+                sb  $t0, 0($s5)
+        end_if:
+        add  $s6, $s6, 1
+        j    for
+    end_for:
+    
+    li  $v0, 0
+    lw  $ra,  0($sp)
+    lw  $s0,  4($sp)
+    lw  $s1,  8($sp)
+    lw  $s2,  12($sp)
+    lw  $s3,  16($sp)
+    lw  $s4,  20($sp)
+    lw  $s5,  24($sp)
+    lw  $s6,  28($sp)
+    add $sp, $sp, 32
+    jr  $ra
 
 .globl solve_queens
 solve_queens:
@@ -734,30 +736,8 @@ sq_prologue:
     move    $s2, $a2
     move    $s3, $a3
 
-    li      $t0, 0      # $t0 is i
 
-sq_for_i:
-    beq     $t0, $s1, sq_end_for_i
-    li      $t1, 0      # $t1 is j
 
-sq_for_j:
-    beq     $t1, $s1, sq_end_for_j
-
-    sll     $t3, $t0, 2             # $t3 = i * 4
-    add     $t3, $t3, $s0           # $t3 = &board[i] = board + i * 4
-    lw      $t3, 0($t3)             # $t3 = board[i]
-
-    add     $t3, $t3, $t1           # $t3 = &board[i][j] = board[i] + j
-    sb      $0, 0($t3)              # board[i][j] = 0
-
-    add     $t1, $t1, 1     # ++j
-    j       sq_for_j
-
-sq_end_for_j:
-    add     $t0, $t0, 1     # ++i
-    j       sq_for_i
-
-sq_end_for_i:
 sq_ll_setup:
     move    $t5, $a2        # $t5 is curr
 
