@@ -270,7 +270,7 @@ main: #p4 stop-falling interrupt flag, p5 puzzle interrupt flag, p6 timer interr
     
     
 bot0_option:    
-
+    #directly move to for strategy
     li $a0, 52
     li $a1, 5
     li $a2, 128
@@ -283,33 +283,37 @@ bot0_option:
     li $a3, 216
     jal quickMoveTo
 
-    li $a0, 30
+    li $a0, 35
     li $a1, 5
     li $a2, 56
     li $a3, -1
     jal quickMoveTo
 
+    li $a0, 35
+    li $a1, 5
+    li $a2, -1
+    li $a3, 128
+    jal quickMoveTo
+
     li $a0, 30
     li $a1, 5
     li $a2, -1
-    li $a3, 144
+    li $a3, 64
     jal quickMoveTo
+    loop_timer_bot0:
+        li $a0, 5
+        jal loop_solve_puzzle
+        #timer 
+        lw $t0, TIMER
+        li  $t1, 10000000        #total cycles
+        sub $t0, $t1, $t0        #cycles left
+        li  $t1, 600000
+        blt $t0, $t1, bot_0_last
+        j loop_timer_bot0
 
-    li $a0, 30
-    li $a1, 5
-    li $a2, 136
-    li $a3, -1
-    jal quickMoveTo
-
-    li $a1, 5
-    li $a2, 162
-    li $a3, -1
-    jal moveTo
-
-    li $a0, 120
-    jal loop_solve_puzzle
-    #go down
-    li $t0, 90
+    bot_0_last:
+    #go right
+    li $t0, 0
     sw $t0, ANGLE
     li $t0, 1
     sw $t0, ANGLE_CONTROL
@@ -321,6 +325,7 @@ bot0_option:
     
     
 bot1_option:
+    #directly move to for strategy
     li $a0, 52
     li $a1, 5
     li $a2, 184
@@ -333,33 +338,38 @@ bot1_option:
     li $a3, 216
     jal quickMoveTo
 
-    li $a0, 30
+    li $a0, 35
     li $a1, 5
     li $a2, 256
     li $a3, -1
     jal quickMoveTo
 
+    li $a0, 35
+    li $a1, 5
+    li $a2, -1
+    li $a3, 128
+    jal quickMoveTo
+
     li $a0, 30
     li $a1, 5
     li $a2, -1
-    li $a3, 144
+    li $a3, 64
     jal quickMoveTo
 
-    li $a0, 30
-    li $a1, 5
-    li $a2, 176
-    li $a3, -1
-    jal quickMoveTo
+    loop_timer_bot1:
+        li $a0, 5
+        jal loop_solve_puzzle
+        #timer 
+        lw $t0, TIMER
+        li  $t1, 10000000        #total cycles
+        sub $t0, $t1, $t0        #cycles left
+        li  $t1, 600000
+        blt $t0, $t1, bot_1_last
+        j loop_timer_bot1
 
-    li $a1, 5
-    li $a2, 158
-    li $a3, -1
-    jal moveTo
-
-    li $a0, 120
-    jal loop_solve_puzzle
-    #go down
-    li $t0, 90
+    bot_1_last:
+    #go left
+    li $t0, 180
     sw $t0, ANGLE
     li $t0, 1
     sw $t0, ANGLE_CONTROL

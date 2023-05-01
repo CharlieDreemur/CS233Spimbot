@@ -5,20 +5,30 @@ it will compare the position of bot with the target position to determine whethe
 
 ## Route
 We start by storing water at the beginning and then climb along the ladder to a higher position on our side. /
-After that jump down the ladder diagonally so that we can clean more tiles. /
+After that jump down the ladder diagonally so that we can clean more tiles and windows. /
 
 ## Solve Puzzle
-We use a normal n queen approach to solve puzzle and wrapper it as a function that we can call / 
-We also has a loop_solve_puzzle function that helps us solve the puzzle for multipe times to save enough water /
+We use an optimized n queen approach to solve puzzle and wrapper it as a function that we can call / 
+We also has a loop_solve_puzzle function that helps us solve the puzzle for multipe times to save enough water for powerwash/
 
 ## Solve Puzzle Optimaziton
-We replaced the place_queen_step given in the documentation with the algorithm in Lab7 /
+We replaced the place_queen_step given in the documentation with the algorithm in Lab7 and we optimized it with backtracking /
 The ability of the bot to solve the puzzle is improved to a certain extent, enabling it to solve the puzzle more quickly and obtain water. /
 
 ## Water Control
 We turn off POWERWASH before solving puzzle to save water, and only open it when we deciding to move /
 
+## Save Water Strategy
+Because our powerwash will clean all tiles in the radius of 4, we will leave an empty space when we encounter corner, and when we start /
+turn on powerwash, the empty space behind the bot will be clean by powerwash since it in the radius of 4. In this way /
+we avoid cleaning repeately and wasting water.
+
 ## Final step
 We developed an algorithm through delicate calculations and repeated experiments. /
 This algorithm controls the bot to solve as many puzzles as possible before the end of the game, store water, and leave enough time for the final jump./
 In this way, we can maximize our score. /
+
+## Pretty Mips Style
+We use function based coding style instead of put everything in main / 
+In this way, we can easily change our route and strategy by only changing the function
+This also allow us to expand more features and fix bugs quickly.
