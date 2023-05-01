@@ -3,12 +3,9 @@
 We write a move function to move easily when we convey arguments velocity, x position, y position to it / 
 it will compare the position of bot with the target position to determine whether to move
 
-## be first
-At the start of the match, our priority should be to move to the opponent's position and then start solving puzzles to obtain water. /
-We only need to acquire the minimum amount of water required to clear the tiles on the next step. /
-This allows us to stay ahead of our opponent, who may be hoarding a large amount of water to avoid stopping in the upcoming process. /
-By being one step ahead, we can clear the tiles near our opponent, leaving them with no tiles to clear and therefore, fewer points to score. /
-This strategy enables us to gain an advantage over our opponent and increase our chances of winning the match./
+## Route
+We start by storing water at the beginning and then climb along the ladder to a higher position on our side. /
+After that jump down the ladder diagonally so that we can clean more tiles. /
 
 ## Solve Puzzle
 We use a normal n queen approach to solve puzzle and wrapper it as a function that we can call / 
