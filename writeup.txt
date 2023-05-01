@@ -3,9 +3,22 @@
 We write a move function to move easily when we convey arguments velocity, x position, y position to it / 
 it will compare the position of bot with the target position to determine whether to move
 
+## be first
+At the start of the match, our priority should be to move to the opponent's position and then start solving puzzles to obtain water. /
+We only need to acquire the minimum amount of water required to clear the tiles on the next step. /
+This allows us to stay ahead of our opponent, who may be hoarding a large amount of water to avoid stopping in the upcoming process. /
+By being one step ahead, we can clear the tiles near our opponent, leaving them with no tiles to clear and therefore, fewer points to score. /
+This strategy enables us to gain an advantage over our opponent and increase our chances of winning the match./
+
 ## Solve Puzzle
 We use a normal n queen approach to solve puzzle and wrapper it as a function that we can call / 
-We also has a loop_solve_puzzle function that helps us solve the puzzle for multipe times to save enough water / 
+We also has a loop_solve_puzzle function that helps us solve the puzzle for multipe times to save enough water /
+
+## Solve Puzzle Optimaziton
+We replaced the place_queen_step given in the documentation with the algorithm in Lab7 /
+The ability of the bot to solve the puzzle is improved to a certain extent, enabling it to solve the puzzle more quickly and obtain water. /
+
+
 
 ## Water Control
 We turn off POWERWASH before solving puzzle to save water, and only open it when we deciding to move / 
