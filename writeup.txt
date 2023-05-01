@@ -15,7 +15,10 @@ We also has a loop_solve_puzzle function that helps us solve the puzzle for mult
 We replaced the place_queen_step given in the documentation with the algorithm in Lab7 /
 The ability of the bot to solve the puzzle is improved to a certain extent, enabling it to solve the puzzle more quickly and obtain water. /
 
-
-
 ## Water Control
-We turn off POWERWASH before solving puzzle to save water, and only open it when we deciding to move / 
+We turn off POWERWASH before solving puzzle to save water, and only open it when we deciding to move /
+
+## Final step
+We developed an algorithm through delicate calculations and repeated experiments. /
+This algorithm controls the bot to solve as many puzzles as possible before the end of the game, store water, and leave enough time for the final jump./
+In this way, we can maximize our score. /
